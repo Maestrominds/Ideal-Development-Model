@@ -211,13 +211,91 @@ pm2 save
 
 ---
 
-## 9. Model
+## 9. OpenAPI
+
+Use `zod-openapi` npm package to setup OpenAPI specs.
+
+```typescript
+// src/lib/server/openapi.ts
+import { createDocument } from "zod-openapi";
+import {
+    PostSchema,
+    CreatePostSchema,
+    UpdatePostSchema,
+} from "../../schemas/posts";
+
+export const spec = createDocument({
+    openapi: "3.1.0",
+    info: { title: "My API", version: "1.0.0" },
+    servers: [{ url: "https://yourdomain.com" }],
+    paths: {
+        "/api/posts/{id}": {
+            get: {
+                summary: "Get post by ID",
+                parameters: [
+                    {
+                        name: "id",
+                        in: "path",
+                        required: true,
+                        schema: z.number().openapi({ example: 1 }),
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: "A post",
+                        content: {
+                            "application/json": {
+                                schema: PostSchema,
+                            },
+                        },
+                    },
+                    404: { description: "Post not found" },
+                },
+            },
+            patch: {
+                summary: "Update a post",
+                requestBody: {
+                    content: {
+                        "application/json": {
+                            schema: UpdatePostSchema,
+                        },
+                    },
+                },
+                responses: {
+                    200: {
+                        description: "Updated post",
+                        content: {
+                            "application/json": {
+                                schema: PostSchema,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+});
+```
+
+Serve it as static JSON
+
+```typescript
+// src/routes/api/openapi.json/+server.ts
+import { json } from "@sveltejs/kit";
+import { spec } from "$lib/server/openapi";
+
+export const GET = async () => json(spec);
+```
+
+---
+
+## 10. Model
 
 ![Image](image.png)
 
 ---
 
-## 10. Reasons for suggestion
+## 11. Reasons for suggestion
 
 - **Better** DX and **Agile**
 - **Simpler** CI/CD
